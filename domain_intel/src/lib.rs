@@ -1,15 +1,26 @@
 // mod error;
 
+use rustls::{ClientConfig, RootCertStore};
 use tokio::net::TcpStream;
-use std::error::Error;
+// use std::error::Error;
 
 #[tokio::main]
 pub async fn connect() {
 
+    // create a TCP connection
     let stream = match TcpStream::connect("google.com:443").await {
         Ok(_) => println!("Connection succeeded", ),
         Err(e) => println!("Connection failed: {}", e),
     };
+
+    // load root certificates
+    let root_store = RootCertStore::empty();
+
+    // create a tls config
+    let config = ClientConfig::builder()
+        .with_root_certificates(root_store)
+        .with_no_client_auth();
+
 }
 
 
