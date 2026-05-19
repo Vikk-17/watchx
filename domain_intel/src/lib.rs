@@ -1,42 +1,22 @@
-// mod error;
+mod models;
 
-use rustls::{ClientConfig, RootCertStore};
-use tokio::net::TcpStream;
-// use std::error::Error;
+use models::*;
+use model::Domain;
+// use std::net::*;
+// use tokio::runtime::Runtime;
+use hickory_resolver::{
+    Resolver,
+    net::runtime::TokioRuntimeProvider,
+    config::*,
+};
 
-#[tokio::main]
-pub async fn connect() {
+pub async fn lookup_domain(domain: String) -> Result<LookupIp, NetError> {
+    let resolver = Resolver::builder_with_config(
+        ResolverConfig::udp_and_tcp(&GOOGLE),
+        TokioRuntimeProvider::default()
+    ).build().unwrap();
 
-    // create a TCP connection
-    let stream = match TcpStream::connect("google.com:443").await {
-        Ok(_) => println!("Connection succeeded", ),
-        Err(e) => println!("Connection failed: {}", e),
-    };
+    let lookup_future = resolver.lookup_ip(domain).await.unwrap();
 
-    // load root certificates
-    let root_store = RootCertStore::empty();
-
-    // create a tls config
-    let config = ClientConfig::builder()
-        .with_root_certificates(root_store)
-        .with_no_client_auth();
-
+    Ok(lookup_future)
 }
-
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use tokio::net::TcpStream;
-
-    #[tokio::test]
-    async fn test_raw_tcp_connections() {
-        let target = "google.com:443";
-        let stream_result = TcpStream::connect(target).await;
-
-        assert!(stream_result.is_ok(), "Failed to connect to {}", target);
-        println!("Successfully opened TCP socket to {}", target);
-    }
-
-}
-
